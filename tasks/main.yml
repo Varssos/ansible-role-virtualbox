@@ -1,0 +1,39 @@
+---
+- name: Check if VirtualBox is already installed
+  ansible.builtin.command: dpkg-query -W {{ virtualbox_package_name }}
+  register: virtualbox_installed
+  failed_when: false
+  changed_when: false
+
+- name: Download and install VirtualBox GPG key
+  ansible.builtin.shell: >
+    wget -O- {{ virtualbox_gpg_key_url }} |
+    gpg --yes --output {{ virtualbox_gpg_keyring }} --dearmor
+  become: true
+  args:
+    creates: "{{ virtualbox_gpg_keyring }}"
+  when: virtualbox_installed.rc != 0
+
+- name: Add VirtualBox apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by={{ virtualbox_gpg_keyring }}] https://download.virtualbox.org/virtualbox/debian {{ ubuntu_codename }} contrib"
+    filename: virtualbox
+    state: present
+  become: true
+  when: virtualbox_installed.rc != 0
+
+- name: Install VirtualBox
+  ansible.builtin.apt:
+    name: "{{ virtualbox_package_name }}"
+    state: present
+    update_cache: true
+  become: true
+  when: virtualbox_installed.rc != 0
+
+# Required to use USB, shared folders etc.
+- name: Add user to vboxusers group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: vboxusers
+    append: true
+  become: true
