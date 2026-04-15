@@ -25,4 +25,5 @@ galaxy_info:
     - virtualization
     - desktop
 
-dependencies: []
+dependencies:
+  - role: ubuntu-codename

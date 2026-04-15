@@ -1,4 +1,5 @@
 # VirtualBox
 virtualbox_package_name: "virtualbox-7.1"
 virtualbox_gpg_key_url: "https://www.virtualbox.org/download/oracle_vbox_2016.asc"
+virtualbox_gpg_key_tmp: "/tmp/oracle_vbox_2016.asc"
 virtualbox_gpg_keyring: "/usr/share/keyrings/oracle-virtualbox-2016.gpg"

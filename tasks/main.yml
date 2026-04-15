@@ -5,13 +5,25 @@
   failed_when: false
   changed_when: false
 
-- name: Download and install VirtualBox GPG key
+- name: Download VirtualBox GPG key
+  ansible.builtin.get_url:
+    url: "{{ virtualbox_gpg_key_url }}"
+    dest: "{{ virtualbox_gpg_key_tmp }}"
+    mode: '0644'
+  when: virtualbox_installed.rc != 0
+
+- name: Convert VirtualBox GPG key to apt keyring format
   ansible.builtin.shell: >
-    wget -O- {{ virtualbox_gpg_key_url }} |
-    gpg --yes --output {{ virtualbox_gpg_keyring }} --dearmor
+    gpg --yes --output {{ virtualbox_gpg_keyring }} --dearmor {{ virtualbox_gpg_key_tmp }}
   become: true
   args:
     creates: "{{ virtualbox_gpg_keyring }}"
+  when: virtualbox_installed.rc != 0
+
+- name: Remove temporary VirtualBox GPG key file
+  ansible.builtin.file:
+    path: "{{ virtualbox_gpg_key_tmp }}"
+    state: absent
   when: virtualbox_installed.rc != 0
 
 - name: Add VirtualBox apt repository
@@ -37,3 +49,11 @@
     groups: vboxusers
     append: true
   become: true
+
+# - name: Download and install VirtualBox Extension Pack
+#   shell: |
+#     wget https://download.virtualbox.org/virtualbox/7.0.14/Oracle_VM_VirtualBox_Extension_Pack-7.0.14.vbox-extpack
+#     sudo VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-7.0.14.vbox-extpack
+#     rm Oracle_VM_VirtualBox_Extension_Pack-7.0.14.vbox-extpack
+#   args:
+#     executable: /bin/bash
